@@ -10,10 +10,7 @@
 # Depends on pyPDF2
 
 from optparse import OptionParser
-import os
-import subprocess
 import re
-import tempfile
 from PyPDF2 import pdf, PdfFileWriter, PdfFileReader
 
 def main():
@@ -27,8 +24,6 @@ def main():
     if len(args) != 1:
         parser.error("1 and only 1 pdf may be bookletized at a time")
 
-    TEMPFILECREATED = False
-
     pdfIn = args[0]
     if options.pdfOut:
         pdfOut = options.pdfOut
@@ -37,12 +32,6 @@ def main():
         pdfOut = pdfOut + '--booklet.pdf'
 
     firstPage = options.firstPage
-
-    # # Get numPagesInFile using pdftk
-    # pdfData = subprocess.check_output(['pdftk', pdfIn, 'dump_data'], universal_newlines=True)
-    # numPagesLine = re.search('NumberOfPages: [0-9]*', pdfData).group(0)
-    # numPagesInFile = int(re.sub('[^0-9]', '', numPagesLine))
-    # if options.debug: print("numPagesInFile: " + str(numPagesInFile))
 
     # Get numPagesInFile using PyPDF
     pdfReader = PdfFileReader(open(pdfIn, 'rb'))
@@ -61,7 +50,7 @@ def main():
     numPages = 1 + lastPage - firstPage
     if options.debug: print("numPages: " + str(numPages))
     numSheets = numPages / 4
-    if (numSheets % 4) | (numSheets == 0):
+    if (numSheets % 4 > 0) | (numSheets == 0):
         numSheets += 1
     if options.debug: print("numSheets: " + str(numSheets))
 
@@ -82,42 +71,6 @@ def main():
         backOffset += 2
     del(pagesInOrder[len(pagesInOrder) - 1])
     if options.debug: print(pagesInOrder)
-
-    # # Create Final PDF with pdftk
-    # exString = 'pdftk A=' + pdfIn
-    # if numBlankPages > 0:
-    #     # TODO - create a blank page
-    #     (tmpBlnk, tmpBlnkPath) = tempfile.mkstemp(suffix=".pdf")
-    #
-    #     writer = PdfFileWriter()
-    #     writer.addBlankPage(width=pageSize[0], height=pageSize[1])
-    #     tmpBlnkFile = open(tmpBlnkPath, 'wb')
-    #     writer.write(tmpBlnkFile)
-    #     tmpBlnkFile.close()
-    #     TEMPFILECREATED = True
-    #
-    #     exString = exString + ' B=' + tmpBlnkPath + ' shuffle'
-    #
-    # for pageNum in pagesInOrder:
-    #     if pageNum > lastPage:
-    #         exString = exString + ' B1'
-    #     else:
-    #         exString = exString + ' A' + str(pageNum)
-    # exString = exString + ' output ' + pdfOut
-    # os.system(exString)
-
-    # # Create Final PDF with pyPDF2
-    # writer = PdfFileWriter()
-    # leftPage = True
-    # for pageNum in pagesInOrder:
-    #     if options.debug: print("pageNum: " + str(pageNum))
-    #     if options.debug: print("leftPage: " + str(leftPage))
-    #     if pageNum > lastPage:
-    #         writer.addBlankPage(width=pageSize[0], height=pageSize[1])
-    #     else:
-    #         writer.addPage(pdfReader.getPage(pageNum - 1))
-    #     leftPage = not leftPage
-    # writer.write(open(pdfOut, 'wb'))
 
     # Create 2-per-page PDF, ready for printing
     # This is done by creating a side-ways page, and overlaying two scaled pages
@@ -148,16 +101,16 @@ def main():
         yOffset = (yPrime - 2 * scale * y) / 4
         yOffsetLeft = yOffset + yPrime / 2
 
-    if options.debug: print 'landscape: ', landscape
-    if options.debug: print 'x: ', x
-    if options.debug: print 'y: ', y
-    if options.debug: print 'xPrime: ', xPrime, xPrime / 2
-    if options.debug: print 'yPrime: ', yPrime, yPrime / 2
-    if options.debug: print 'scale: ', scale, scale * x, scale * y
-    if options.debug: print 'xOffset: ', xOffset
-    if options.debug: print 'yOffset: ', yOffset
-    if options.debug: print 'xOffsetLeft: ', xOffsetLeft
-    if options.debug: print 'yOffsetLeft: ', yOffsetLeft
+    if options.debug: print('landscape: ', landscape)
+    if options.debug: print('x: ', x)
+    if options.debug: print('y: ', y)
+    if options.debug: print('xPrime: ', xPrime, xPrime / 2)
+    if options.debug: print('yPrime: ', yPrime, yPrime / 2)
+    if options.debug: print('scale: ', scale, scale * x, scale * y)
+    if options.debug: print('xOffset: ', xOffset)
+    if options.debug: print('yOffset: ', yOffset)
+    if options.debug: print('xOffsetLeft: ', xOffsetLeft)
+    if options.debug: print('yOffsetLeft: ', yOffsetLeft)
 
     writer = PdfFileWriter()
     leftPage = True
@@ -178,9 +131,6 @@ def main():
 
     writer.write(open(pdfOut, 'wb'))
     print("Completed!  Booklet is in " + pdfOut)
-
-    if TEMPFILECREATED:
-        os.remove(tmpBlnkPath)
 
 if __name__ == "__main__":
     main()
