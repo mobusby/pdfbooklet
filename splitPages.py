@@ -6,7 +6,7 @@
 #
 # Licensed under the MIT/X11 license - see LICENSE.txt
 #
-# Shrink pages in a PDF to half size (i.e. Letter pages become half-letter)
+# Split letter size pages in half (i.e. Letter pages become half-letter)
 
 from optparse import OptionParser
 import re
@@ -29,7 +29,7 @@ def main():
         pdfOut = options.pdfOut
     else:
         pdfOut = re.sub('\.[pP][dD][fF]$', '', pdfIn)
-        pdfOut = pdfOut + '--shrunk.pdf'
+        pdfOut = pdfOut + '--split.pdf'
 
     firstPage = options.firstPage
 
@@ -51,38 +51,29 @@ def main():
     y = float(pageSize[1])
 
     if x > y:
+        # Landscape
         xPrime = y
         yPrime = x / 2.0
     else:
+        # Portrait
         xPrime = y / 2.0
         yPrime = x
-
-    xScale = xPrime / x
-    yScale = yPrime / y
-
-    if xScale < yScale:
-        scale = xScale
-    else:
-        scale = yScale
-
-    xTranslate = (xPrime - scale * x)
-    yTranslate = (yPrime - scale * y)
-
-    if options.center:
-        xTranslate = xTranslate / 2.0
-        yTranslate = yTranslate / 2.0
 
     i = 0
     writer = PdfFileWriter()
     while i < numPagesInFile:
-        page = pdf.PageObject.createBlankPage(width=xPrime, height=yPrime)
-        page.mergeScaledTranslatedPage(pdfReader.getPage(i), scale, xTranslate, yTranslate)
-        writer.addPage(page)
+        outPageOne = pdf.PageObject.createBlankPage(width=yPrime, height=xPrime)
+        outPageTwo = pdf.PageObject.createBlankPage(width=yPrime, height=xPrime)
+        inPage = pdfReader.getPage(i)
+        outPageOne.mergePage(inPage)
+        writer.addPage(outPageOne)
+        outPageTwo.mergeTranslatedPage(inPage, tx=(-yPrime + 1), ty=0)
+        writer.addPage(outPageTwo)
         i += 1
 
     writer.write(open(pdfOut, 'wb'))
 
-    print("Completed!  Shrunk PDF is in " + pdfOut)
+    print("Completed!  Split PDF is in " + pdfOut)
 
 if __name__ == "__main__":
     main()
