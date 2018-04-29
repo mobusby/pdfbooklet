@@ -50,7 +50,8 @@ def main():
     numPages = 1 + lastPage - firstPage
     if options.debug: print("numPages: " + str(numPages))
     numSheets = numPages / 4
-    if ((numSheets > 4) & (numSheets % 4 > 0)) | (numSheets == 0):
+    if options.debug: print("numPages % 4: " + str(numPages % 4))
+    if ((numPages > 4) & (numPages % 4 > 0)) | (numSheets == 0):
         numSheets += 1
     if options.debug: print("numSheets: " + str(numSheets))
 
