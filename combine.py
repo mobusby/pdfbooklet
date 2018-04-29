@@ -28,7 +28,7 @@ def main():
     merger = PdfFileMerger()
     for fileName in args:
         merger.append(open(fileName, 'rb'))
-    
+
     merger.write(open(options.pdfOut, 'wb'))
 
 if __name__ == "__main__":

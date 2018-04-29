@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
-# pdfshrink.py
+# splitPages.py
 #
 # Copyright (c) 2014 Mark O. Busby <mark@busbycreations.com>
 #
 # Licensed under the MIT/X11 license - see LICENSE.txt
 #
-# Split letter size pages in half (i.e. Letter pages become half-letter)
+# Split letter size pages in half (i.e. Letter pages become half-letter) and
+# compile them into a new pdf
 
 from optparse import OptionParser
 import re
@@ -18,6 +19,7 @@ def main():
     parser.add_option("-f", "--first", type="int", dest="firstPage", default=1, help="First page of booklet")
     parser.add_option("-l", "--last", type="int", dest="lastPage", default=0, help="Last page of booklet")
     parser.add_option("-n", "--nocenter", action="store_false", dest="center", default=True, help="Do not center the output")
+    parser.add_option("-u", "--deduplicate", action="store_true", dest="deduplicate", default=False, help="Leave out the second (duplicate) half of each page")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Print debug messages")
     (options, args) = parser.parse_args()
 
@@ -47,6 +49,8 @@ def main():
     if lastPage > numPagesInFile:
         lastPage = numPagesInFile
 
+    deduplicate = options.deduplicate
+
     x = float(pageSize[0])
     y = float(pageSize[1])
 
@@ -63,12 +67,14 @@ def main():
     writer = PdfFileWriter()
     while i < numPagesInFile:
         outPageOne = pdf.PageObject.createBlankPage(width=yPrime, height=xPrime)
-        outPageTwo = pdf.PageObject.createBlankPage(width=yPrime, height=xPrime)
         inPage = pdfReader.getPage(i)
         outPageOne.mergePage(inPage)
+        outPageOne.cropBox =
         writer.addPage(outPageOne)
-        outPageTwo.mergeTranslatedPage(inPage, tx=(-yPrime + 1), ty=0)
-        writer.addPage(outPageTwo)
+        if deduplicate == False:
+            outPageTwo = pdf.PageObject.createBlankPage(width=yPrime, height=xPrime)
+            outPageTwo.mergeTranslatedPage(inPage, tx=(-yPrime + 1), ty=0)
+            writer.addPage(outPageTwo)
         i += 1
 
     writer.write(open(pdfOut, 'wb'))
