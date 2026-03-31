@@ -123,7 +123,7 @@ def main():
         if pageNum > lastPage:
             page = pdf.PageObject.createBlankPage(width=x, height=y)
         else:
-            page = pdfReader.getPage(pageNum - 1)
+            page = pdfReader.getPage(int(pageNum - 1))
 
         if leftPage == True:
             combinedPage = pdf.PageObject.createBlankPage(width=xPrime, height=yPrime)
